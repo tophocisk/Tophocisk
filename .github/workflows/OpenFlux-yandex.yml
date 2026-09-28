@@ -1,0 +1,40 @@
+name: OpenFlux Exit Node (Yandex)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-exit-node:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+
+      - name: Clone and build OpenFlux
+        run: |
+          git clone --depth 1 https://github.com/p1neappleXpress/OpenFlux.git
+          cd OpenFlux
+          go mod tidy
+          go build -o universal-bypass-tool .
+
+      - name: Configure iptables
+        run: |
+          sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP
+
+      - name: Run Exit Node
+        env:
+          DOC_URL: ${{ secrets.YANDEX_DOC_URL }}
+        run: |
+          echo "::add-mask::$DOC_URL"
+          cd OpenFlux
+          sudo ./universal-bypass-tool \
+            --role=exit \
+            --mode=l4 \
+            --codec=legacy \
+            --transport yandex \
+            --url "$DOC_URL"
