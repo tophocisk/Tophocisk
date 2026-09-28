@@ -35,7 +35,7 @@ jobs:
           set +x
 
           sudo apt-get update
-          sudo apt-get install -y git golang-go iptables
+          sudo apt-get install -y git golang-go
 
       - name: Download OpenFlux
         shell: bash
@@ -73,42 +73,6 @@ jobs:
           chmod +x universal-bypass-tool
 
           echo "Build successful."
-
-      - name: Configure iptables
-        shell: bash
-        run: |
-          set +x
-
-          sudo iptables -C OUTPUT \
-            -p tcp \
-            --tcp-flags RST RST \
-            -j DROP 2>/dev/null || \
-          sudo iptables -A OUTPUT \
-            -p tcp \
-            --tcp-flags RST RST \
-            -j DROP
-
-          echo "RST DROP rule configured."
-
-      - name: Check raw sockets
-        shell: bash
-        run: |
-          set +x
-
-          sudo python3 - <<'PY'
-          import socket
-
-          try:
-              s = socket.socket(
-                  socket.AF_INET,
-                  socket.SOCK_RAW,
-                  socket.IPPROTO_TCP
-              )
-              s.close()
-              print("RAW SOCKET: OK")
-          except Exception as e:
-              print(f"RAW SOCKET: FAILED: {type(e).__name__}: {e}")
-          PY
 
       - name: Start OpenFlux
         shell: bash
